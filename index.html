@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSV AI 문서 자동화 워크벤치</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">CSV</div>
+          <div>
+            <h1>AI 문서 자동화 워크벤치</h1>
+            <p>교육용 Computer System Validation 실습 프로그램</p>
+          </div>
+        </div>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>프로젝트</h2>
+            <button type="button" class="icon-button" id="loadSampleBtn" title="예제 불러오기" aria-label="예제 불러오기">↺</button>
+          </div>
+
+          <label>
+            시스템명
+            <input id="systemName" type="text" value="전자 배치기록 관리 시스템" />
+          </label>
+
+          <label>
+            업무 프로세스
+            <input id="processName" type="text" value="제조 기록 작성 및 QA 검토" />
+          </label>
+
+          <label>
+            시스템 유형
+            <select id="systemType">
+              <option>GxP 업무지원 시스템</option>
+              <option>LIMS / 실험실 시스템</option>
+              <option>MES / 제조 실행 시스템</option>
+              <option>QMS / 품질 시스템</option>
+              <option>ERP 인터페이스 시스템</option>
+            </select>
+          </label>
+
+          <label>
+            GAMP 분류
+            <select id="gampCategory">
+              <option>Category 4 - 구성형 소프트웨어</option>
+              <option>Category 3 - 비구성 제품</option>
+              <option>Category 5 - 맞춤 개발 소프트웨어</option>
+            </select>
+          </label>
+
+          <div class="check-grid" aria-label="적용 기준">
+            <label class="check-item"><input type="checkbox" value="EU GMP Annex 11" checked /> EU GMP Annex 11</label>
+            <label class="check-item"><input type="checkbox" value="21 CFR Part 11" checked /> 21 CFR Part 11</label>
+            <label class="check-item"><input type="checkbox" value="ALCOA+" checked /> ALCOA+</label>
+            <label class="check-item"><input type="checkbox" value="GAMP 5" checked /> GAMP 5</label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>자동화 옵션</h2>
+          <label class="switch-row">
+            <span>위험 기반 테스트 수량 조정</span>
+            <input id="riskBasedTesting" type="checkbox" checked />
+          </label>
+          <label class="switch-row">
+            <span>데이터 무결성 항목 강화</span>
+            <input id="dataIntegrityFocus" type="checkbox" checked />
+          </label>
+          <label class="switch-row">
+            <span>AI 검토 프롬프트 포함</span>
+            <input id="includePrompt" type="checkbox" checked />
+          </label>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>OpenAI API</h2>
+            <button type="button" class="icon-button" id="toggleApiKeyBtn" title="API 키 표시 전환" aria-label="API 키 표시 전환">key</button>
+          </div>
+
+          <label>
+            API Key
+            <input id="openaiApiKey" type="password" placeholder="sk-..." autocomplete="off" />
+          </label>
+
+          <label>
+            모델
+            <input id="openaiModel" type="text" value="gpt-5.2" />
+          </label>
+
+          <label>
+            최대 출력 토큰
+            <input id="openaiMaxTokens" type="number" min="500" max="12000" step="500" value="3500" />
+          </label>
+
+          <label class="switch-row">
+            <span>브라우저 세션에 키 보관</span>
+            <input id="rememberOpenAiKey" type="checkbox" checked />
+          </label>
+
+          <button type="button" class="sidebar-button" id="clearApiKeyBtn">API 키 지우기</button>
+          <p class="api-note">키는 로컬 실습 서버 또는 OpenAI API 호출에만 사용됩니다. 공용 PC나 배포 환경에는 저장하지 마세요.</p>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">CSV Training Lab</p>
+            <h2>요구사항에서 밸리데이션 문서 초안까지</h2>
+          </div>
+          <div class="actions">
+            <button type="button" class="secondary-button" id="copyPromptBtn">프롬프트 복사</button>
+            <button type="button" class="secondary-button" id="runOpenAiBtn">OpenAI 보강</button>
+            <button type="button" class="secondary-button" id="downloadMdBtn">패키지 MD</button>
+            <button type="button" class="secondary-button" id="exportCsvBtn">매트릭스 CSV</button>
+            <button type="button" class="primary-button" id="generateBtn">문서 생성</button>
+          </div>
+        </header>
+
+        <section class="input-band" aria-label="입력 영역">
+          <div class="input-block">
+            <div class="block-head">
+              <h3>요구사항 / 업무 메모</h3>
+              <span id="reqCount">0 lines</span>
+            </div>
+            <textarea id="requirementInput" spellcheck="false"></textarea>
+          </div>
+
+          <div class="input-block">
+            <div class="block-head">
+              <h3>기존 문서 / SOP 조각</h3>
+              <span>재사용 근거</span>
+            </div>
+            <textarea id="referenceInput" spellcheck="false"></textarea>
+          </div>
+        </section>
+
+        <section class="summary-strip" aria-label="요약">
+          <div class="metric">
+            <span id="metricReq">0</span>
+            <p>URS</p>
+          </div>
+          <div class="metric">
+            <span id="metricRisk">0</span>
+            <p>Risk</p>
+          </div>
+          <div class="metric">
+            <span id="metricTest">0</span>
+            <p>Test</p>
+          </div>
+          <div class="metric">
+            <span id="metricCoverage">0%</span>
+            <p>Traceability</p>
+          </div>
+          <div class="metric">
+            <span id="metricHigh">0</span>
+            <p>High Risk</p>
+          </div>
+        </section>
+
+        <section class="output-area" aria-label="생성 결과">
+          <nav class="tabs" aria-label="문서 탭">
+            <button type="button" class="tab active" data-tab="overview">개요</button>
+            <button type="button" class="tab" data-tab="urs">URS</button>
+            <button type="button" class="tab" data-tab="risk">위험평가</button>
+            <button type="button" class="tab" data-tab="tests">IQ/OQ/PQ</button>
+            <button type="button" class="tab" data-tab="trace">추적성</button>
+            <button type="button" class="tab" data-tab="report">보고서</button>
+            <button type="button" class="tab" data-tab="prompt">AI 프롬프트</button>
+            <button type="button" class="tab" data-tab="ai">AI 결과</button>
+          </nav>
+
+          <div id="tab-overview" class="tab-panel active"></div>
+          <div id="tab-urs" class="tab-panel"></div>
+          <div id="tab-risk" class="tab-panel"></div>
+          <div id="tab-tests" class="tab-panel"></div>
+          <div id="tab-trace" class="tab-panel"></div>
+          <div id="tab-report" class="tab-panel"></div>
+          <div id="tab-prompt" class="tab-panel"></div>
+          <div id="tab-ai" class="tab-panel"></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
